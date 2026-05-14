@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>🎈 Lista de Invitados</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #ff7c4a;
+    --orange-light: #ffb347;
+    --green: #22c55e;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --bg: #fdf6f0;
+    --card: #fff;
+    --border: #f0e0d6;
+    --text: #2d1a0e;
+    --muted: #a08070;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #ff7c4a, #ff9a6c, #ffb347);
+    padding: 20px 16px 16px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(255,124,74,0.3);
+    position: sticky; top: 0; z-index: 50;
+  }
+  .header-emoji { font-size: 28px; }
+  .header h1 { font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.5px; text-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+  .header p { font-size: 12px; color: rgba(255,255,255,0.85); margin-top: 2px; }
+
+  /* STATS */
+  .stats-bar { background: #fff; border-bottom: 1px solid var(--border); padding: 14px 12px 10px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 10px; }
+  .stat-card { border-radius: 10px; padding: 8px 4px; text-align: center; }
+  .stat-card .ico { font-size: 16px; }
+  .stat-card .num { font-size: 20px; font-weight: 800; line-height: 1; }
+  .stat-card .lbl { font-size: 9px; color: #999; margin-top: 2px; }
+  .progress-wrap { background: #f0e8e0; border-radius: 99px; height: 7px; overflow: hidden; }
+  .progress-bar { height: 100%; background: linear-gradient(90deg, #22c55e, #4ade80); border-radius: 99px; transition: width 0.5s ease; }
+  .progress-labels { display: flex; justify-content: space-between; font-size: 10px; color: #999; margin-top: 4px; }
+  .progress-labels .pct { color: var(--green); font-weight: 700; }
+
+  /* TABS */
+  .tabs { display: flex; background: #fff; border-bottom: 1px solid var(--border); }
+  .tab { flex: 1; padding: 11px; border: none; background: transparent; border-bottom: 2px solid transparent; color: #aaa; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Nunito', sans-serif; transition: all 0.2s; }
+  .tab.active { background: #fff7f2; border-bottom-color: var(--orange); color: var(--orange); }
+
+  /* FILTERS */
+  .filters { padding: 10px 12px 0; }
+  .search-input { width: 100%; padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; background: #fff; outline: none; font-family: 'Nunito', sans-serif; color: var(--text); }
+  .search-input:focus { border-color: var(--orange); }
+  .filter-row { display: flex; gap: 6px; overflow-x: auto; padding: 8px 0 4px; scrollbar-width: none; }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .filter-btn { padding: 5px 12px; border-radius: 99px; border: 1.5px solid var(--border); background: #fff; color: #888; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: 'Nunito', sans-serif; transition: all 0.2s; flex-shrink: 0; }
+  .filter-btn.active-status { border-color: var(--orange); background: var(--orange); color: #fff; }
+  .filter-btn.active-type { border-color: #7c3aed; background: #7c3aed; color: #fff; }
+  .filter-btn.active-group { border-color: #0ea5e9; background: #0ea5e9; color: #fff; }
+
+  /* GUEST LIST */
+  .guest-list { padding: 10px 12px 100px; display: flex; flex-direction: column; gap: 6px; }
+  .guest-card {
+    background: #fff; border-radius: 12px; padding: 10px 10px 10px 14px;
+    display: flex; align-items: center; gap: 8;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    border: 1.5px solid #f0e0d640;
+    border-left-width: 4px;
+    transition: all 0.2s;
+  }
+  .guest-icon { font-size: 18px; min-width: 22px; }
+  .guest-info { flex: 1; min-width: 0; }
+  .guest-name { font-size: 13px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 4; }
+  .guest-name input { border: 1.5px solid var(--orange); border-radius: 6px; padding: 2px 7px; font-size: 13px; font-family: 'Nunito', sans-serif; font-weight: 700; outline: none; width: 100%; color: var(--text); }
+  .edit-actions { display: flex; gap: 4; margin-top: 4px; }
+  .edit-actions button { padding: 3px 10px; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 700; font-family: 'Nunito', sans-serif; }
+  .btn-ok { background: var(--green); color: #fff; }
+  .btn-cancel { background: #e5e7eb; color: #555; }
+  .edit-btn { background: none; border: none; cursor: pointer; font-size: 12px; opacity: 0.4; padding: 0; }
+  .guest-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .special-badge { font-size: 9px; background: #fef9c3; color: #a16207; border: 1px solid #fde047; border-radius: 4px; padding: 1px 5px; }
+  .status-btns { display: flex; gap: 4px; flex-shrink: 0; }
+  .status-btn { width: 30px; height: 30px; border-radius: 8px; border: 1.5px solid #e8d5c9; background: transparent; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .status-btn.active { transform: scale(1.12); }
+  .empty { text-align: center; color: #bbb; padding: 40px 20px; font-size: 15px; }
+
+  /* CHAT */
+  .chat-wrap { display: flex; flex-direction: column; height: calc(100vh - 230px); }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 14px 12px; display: flex; flex-direction: column; gap: 10px; }
+  .msg { display: flex; }
+  .msg.user { justify-content: flex-end; }
+  .msg.assistant { justify-content: flex-start; }
+  .bubble { max-width: 85%; padding: 10px 14px; border-radius: 18px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+  .bubble.user { background: linear-gradient(135deg, #ff7c4a, #ff9a6c); color: #fff; border-radius: 18px 18px 4px 18px; }
+  .bubble.assistant { background: #fff; color: var(--text); border: 1px solid var(--border); border-radius: 18px 18px 18px 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .typing { display: flex; gap: 5px; align-items: center; padding: 12px 16px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--orange-light); animation: bounce 1s infinite; }
+  .dot:nth-child(2) { animation-delay: 0.15s; }
+  .dot:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+  .chat-input-bar { padding: 10px 12px; background: #fff; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+  .chat-input { flex: 1; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 99px; font-size: 13px; font-family: 'Nunito', sans-serif; outline: none; background: #fdf9f7; color: var(--text); }
+  .chat-input:focus { border-color: var(--orange); }
+  .send-btn { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, var(--orange), var(--orange-light)); border: none; cursor: pointer; font-size: 17px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(255,124,74,0.3); flex-shrink: 0; transition: opacity 0.2s; }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* PAGE */
+  #page-lista { display: block; }
+  #page-chat { display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-emoji">🎈🎂🎉</div>
+  <h1>Lista de Invitados</h1>
+  <p>¡Organizá la fiesta perfecta! 🥳</p>
+</div>
+
+<div class="stats-bar">
+  <div class="stats-grid">
+    <div class="stat-card" style="background:linear-gradient(135deg,#ff7c4a18,#ff7c4a08);border:1px solid #ff7c4a30">
+      <div class="ico">👥</div><div class="num" id="s-total" style="color:var(--orange)">0</div><div class="lbl">Total</div>
+    </div>
+    <div class="stat-card" style="background:linear-gradient(135deg,#22c55e18,#22c55e08);border:1px solid #22c55e30">
+      <div class="ico">✅</div><div class="num" id="s-conf" style="color:var(--green)">0</div><div class="lbl">Confirmados</div>
+    </div>
+    <div class="stat-card" style="background:linear-gradient(135deg,#ef444418,#ef444408);border:1px solid #ef444430">
+      <div class="ico">❌</div><div class="num" id="s-no" style="color:var(--red)">0</div><div class="lbl">No vienen</div>
+    </div>
+    <div class="stat-card" style="background:linear-gradient(135deg,#f59e0b18,#f59e0b08);border:1px solid #f59e0b30">
+      <div class="ico">⏳</div><div class="num" id="s-pend" style="color:var(--yellow)">0</div><div class="lbl">Pendientes</div>
+    </div>
+  </div>
+  <div class="progress-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+  <div class="progress-labels">
+    <span id="s-ninos">👶 0/28</span>
+    <span class="pct" id="s-pct">0%</span>
+    <span id="s-adultos">🧑 0/58</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('lista')">📋 Lista</button>
+  <button class="tab" onclick="showTab('chat')" id="tab-chat">💬 Asistente</button>
+</div>
+
+<!-- LISTA -->
+<div id="page-lista">
+  <div class="filters">
+    <input class="search-input" type="text" placeholder="🔍 Buscar invitado..." oninput="applyFilters()" id="search-input">
+    <div class="filter-row" id="filter-status">
+      <button class="filter-btn active-status" onclick="setFilter('status','todos',this)">Todos</button>
+      <button class="filter-btn" onclick="setFilter('status','confirmado',this)">✅ Confirmado</button>
+      <button class="filter-btn" onclick="setFilter('status','pendiente',this)">⏳ Pendiente</button>
+      <button class="filter-btn" onclick="setFilter('status','no_viene',this)">❌ No viene</button>
+    </div>
+    <div class="filter-row" id="filter-type">
+      <button class="filter-btn active-type" onclick="setFilter('type','todos',this)">👥 Todos</button>
+      <button class="filter-btn" onclick="setFilter('type','niño',this)">👶 Niños</button>
+      <button class="filter-btn" onclick="setFilter('type','adulto',this)">🧑 Adultos</button>
+    </div>
+    <div class="filter-row" id="filter-group"></div>
+  </div>
+  <div class="guest-list" id="guest-list"></div>
+</div>
+
+<!-- CHAT -->
+<div id="page-chat" style="display:none">
+  <div class="chat-wrap">
+    <div class="chat-messages" id="chat-messages">
+      <div class="msg assistant"><div class="bubble assistant">¡Hola! 🎉 Soy tu asistente para organizar la fiesta. Puedo ayudarte con el estado de los invitados, darte resúmenes, o responder preguntas. ¿En qué te ayudo?</div></div>
+    </div>
+    <div class="chat-input-bar">
+      <input class="chat-input" type="text" id="chat-input" placeholder="Preguntá algo sobre la fiesta..." onkeydown="if(event.key==='Enter')sendChat()">
+      <button class="send-btn" id="send-btn" onclick="sendChat()">🚀</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'party-guests-v2';
+const STATUS = {
+  confirmado: { emoji:'✅', color:'#22c55e', bg:'rgba(34,197,94,0.13)' },
+  pendiente:  { emoji:'⏳', color:'#f59e0b', bg:'rgba(245,158,11,0.12)' },
+  no_viene:   { emoji:'❌', color:'#ef4444', bg:'rgba(239,68,68,0.11)' },
+};
+const GROUP_EMOJI = { 'Jardín':'🏫','Padrinos':'🫂','León':'🦁','Tribu':'🌿','Familia':'👨‍👩‍👧‍👦','Amigos Damián':'🤝','Banco':'🏦' };
+
+const INITIAL = [
+  // NIÑOS - Jardín (22)
+  ...Array.from({length:22},(_,i)=>({id:i+1,name:`Niño Jardín ${i+1}`,group:'Jardín',type:'niño',status:'pendiente'})),
+  // NIÑOS - Padrinos (2)
+  {id:23,name:'Niño Padrino 1',group:'Padrinos',type:'niño',status:'pendiente'},
+  {id:24,name:'Niño Padrino 2',group:'Padrinos',type:'niño',status:'pendiente'},
+  // NIÑOS - León (1)
+  {id:25,name:'León',group:'León',type:'niño',status:'pendiente'},
+  // NIÑOS - Tribu (3)
+  {id:26,name:'Niño Tribu 1',group:'Tribu',type:'niño',status:'pendiente'},
+  {id:27,name:'Niño Tribu 2',group:'Tribu',type:'niño',status:'pendiente'},
+  {id:28,name:'Niño Tribu 3',group:'Tribu',type:'niño',status:'pendiente'},
+  // ADULTOS - Jardín padres (22)
+  ...Array.from({length:22},(_,i)=>({id:29+i,name:`Papá/Mamá Jardín ${i+1}`,group:'Jardín',type:'adulto',status:'pendiente'})),
+  // ADULTOS - Jardín especiales (5)
+  ...Array.from({length:5},(_,i)=>({id:51+i,name:`Especial Jardín ${i+1}`,group:'Jardín',type:'adulto',status:'pendiente',special:true})),
+  // ADULTOS - Familia (14)
+  ...Array.from({length:14},(_,i)=>({id:56+i,name:`Familiar ${i+1}`,group:'Familia',type:'adulto',status:'pendiente'})),
+  // ADULTOS - Amigos Damián (10)
+  ...Array.from({length:10},(_,i)=>({id:70+i,name:`Amigo Damián ${i+1}`,group:'Amigos Damián',type:'adulto',status:'pendiente'})),
+  // ADULTOS - Tribu (3)
+  {id:80,name:'Tribu Adulto 1',group:'Tribu',type:'adulto',status:'pendiente'},
+  {id:81,name:'Tribu Adulto 2',group:'Tribu',type:'adulto',status:'pendiente'},
+  {id:82,name:'Tribu Adulto 3',group:'Tribu',type:'adulto',status:'pendiente'},
+  // ADULTOS - Banco (4)
+  {id:83,name:'Banco 1',group:'Banco',type:'adulto',status:'pendiente'},
+  {id:84,name:'Banco 2',group:'Banco',type:'adulto',status:'pendiente'},
+  {id:85,name:'Banco 3',group:'Banco',type:'adulto',status:'pendiente'},
+  {id:86,name:'Banco 4',group:'Banco',type:'adulto',status:'pendiente'},
+];
+
+let guests = [];
+let filters = { status:'todos', type:'todos', group:'todos' };
+let editingId = null;
+
+function loadGuests() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const map = {};
+    saved.forEach(g => map[g.id] = g);
+    guests = INITIAL.map(g => map[g.id] ? {...g, name: map[g.id].name, status: map[g.id].status} : {...g});
+  } catch { guests = INITIAL.map(g=>({...g})); }
+}
+
+function saveGuests() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(guests.map(g=>({id:g.id,name:g.name,status:g.status}))));
+}
+
+function updateStats() {
+  const total = guests.length;
+  const conf = guests.filter(g=>g.status==='confirmado').length;
+  const no = guests.filter(g=>g.status==='no_viene').length;
+  const pend = guests.filter(g=>g.status==='pendiente').length;
+  const ninos = guests.filter(g=>g.type==='niño');
+  const adultos = guests.filter(g=>g.type==='adulto');
+  const confNinos = ninos.filter(g=>g.status==='confirmado').length;
+  const confAdultos = adultos.filter(g=>g.status==='confirmado').length;
+  const pct = Math.round((conf/total)*100);
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-conf').textContent = conf;
+  document.getElementById('s-no').textContent = no;
+  document.getElementById('s-pend').textContent = pend;
+  document.getElementById('progress-bar').style.width = pct+'%';
+  document.getElementById('s-pct').textContent = pct+'%';
+  document.getElementById('s-ninos').textContent = `👶 ${confNinos}/${ninos.length}`;
+  document.getElementById('s-adultos').textContent = `🧑 ${confAdultos}/${adultos.length}`;
+}
+
+function buildGroupFilters() {
+  const groups = [...new Set(guests.map(g=>g.group))];
+  const row = document.getElementById('filter-group');
+  row.innerHTML = `<button class="filter-btn active-group" onclick="setFilter('group','todos',this)">Todos</button>`;
+  groups.forEach(g => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn';
+    btn.textContent = (GROUP_EMOJI[g]||'•')+' '+g;
+    btn.onclick = function(){ setFilter('group',g,this); };
+    row.appendChild(btn);
+  });
+}
+
+function setFilter(type, val, btn) {
+  filters[type] = val;
+  // Reset active classes in parent row
+  const rowId = type==='status'?'filter-status':type==='type'?'filter-type':'filter-group';
+  const activeClass = type==='status'?'active-status':type==='type'?'active-type':'active-group';
+  document.querySelectorAll('#'+rowId+' .filter-btn').forEach(b=>b.classList.remove(activeClass));
+  btn.classList.add(activeClass);
+  renderList();
+}
+
+function applyFilters() { renderList(); }
+
+function setStatus(id, status) {
+  const g = guests.find(x=>x.id===id);
+  if (g) { g.status = status; saveGuests(); updateStats(); renderList(); }
+}
+
+function startEdit(id) {
+  editingId = id;
+  renderList();
+  setTimeout(()=>{ const inp = document.getElementById('edit-'+id); if(inp) { inp.focus(); inp.select(); } }, 50);
+}
+
+function confirmEdit(id) {
+  const inp = document.getElementById('edit-'+id);
+  if (inp && inp.value.trim()) {
+    const g = guests.find(x=>x.id===id);
+    if (g) g.name = inp.value.trim();
+  }
+  editingId = null;
+  saveGuests();
+  renderList();
+}
+
+function cancelEdit() { editingId = null; renderList(); }
+
+function renderList() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const list = document.getElementById('guest-list');
+  const filtered = guests.filter(g => {
+    const ms = filters.status==='todos' || g.status===filters.status;
+    const mt = filters.type==='todos' || g.type===filters.type;
+    const mg = filters.group==='todos' || g.group===filters.group;
+    const mq = g.name.toLowerCase().includes(search);
+    return ms && mt && mg && mq;
+  });
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty">Sin resultados 🔍</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(g => {
+    const sc = STATUS[g.status];
+    const geo = GROUP_EMOJI[g.group]||'•';
+    const isEditing = editingId === g.id;
+    return `
+    <div class="guest-card" style="border-left-color:${sc.color};border-color:${sc.color}30">
+      <span class="guest-icon">${geo}</span>
+      <div class="guest-info">
+        ${isEditing ? `
+          <div class="guest-name"><input id="edit-${g.id}" value="${g.name.replace(/"/g,'&quot;')}" onkeydown="if(event.key==='Enter')confirmEdit(${g.id});if(event.key==='Escape')cancelEdit()"></div>
+          <div class="edit-actions">
+            <button class="btn-ok" onclick="confirmEdit(${g.id})">✓ Guardar</button>
+            <button class="btn-cancel" onclick="cancelEdit()">✕</button>
+          </div>
+        ` : `
+          <div class="guest-name">
+            <span>${g.name}</span>
+            ${g.special ? '<span class="special-badge">⭐ especial</span>' : ''}
+            <button class="edit-btn" onclick="startEdit(${g.id})">✏️</button>
+          </div>
+        `}
+        <div class="guest-meta">${g.type==='niño'?'👶':'🧑'} ${g.group}</div>
+      </div>
+      <div class="status-btns">
+        ${['confirmado','pendiente','no_viene'].map(s=>`
+          <button class="status-btn ${g.status===s?'active':''}"
+            style="${g.status===s?`border-color:${STATUS[s].color};background:${STATUS[s].bg};`:''}"
+            onclick="setStatus(${g.id},'${s}')"
+            title="${s}">${STATUS[s].emoji}</button>
+        `).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// TABS
+function showTab(tab) {
+  document.getElementById('page-lista').style.display = tab==='lista'?'block':'none';
+  document.getElementById('page-chat').style.display = tab==='chat'?'block':'none';
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active', (i===0&&tab==='lista')||(i===1&&tab==='chat')));
+}
+
+// CHAT
+let chatHistory = [];
+let chatLoading = false;
+
+function buildGuestSummary() {
+  const total = guests.length;
+  const conf = guests.filter(g=>g.status==='confirmado').length;
+  const no = guests.filter(g=>g.status==='no_viene').length;
+  const pend = guests.filter(g=>g.status==='pendiente').length;
+  const ninos = guests.filter(g=>g.type==='niño');
+  const adultos = guests.filter(g=>g.type==='adulto');
+  const groups = [...new Set(guests.map(g=>g.group))];
+  const groupSummary = groups.map(gr => {
+    const gs = guests.filter(g=>g.group===gr);
+    return `  ${gr}: ${gs.length} total (✅${gs.filter(g=>g.status==='confirmado').length} ❌${gs.filter(g=>g.status==='no_viene').length} ⏳${gs.filter(g=>g.status==='pendiente').length})`;
+  }).join('\n');
+  return `Estado actual de la lista:
+- Total: ${total} invitados
+- Confirmados: ${conf} | No vienen: ${no} | Pendientes: ${pend}
+- Niños: ${ninos.filter(g=>g.status==='confirmado').length}/${ninos.length} confirmados
+- Adultos: ${adultos.filter(g=>g.status==='confirmado').length}/${adultos.length} confirmados
+
+Por grupo:\n${groupSummary}`;
+}
+
+function appendMsg(role, text) {
+  const box = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg '+role;
+  div.innerHTML = `<div class="bubble ${role}">${text.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function showTyping() {
+  const box = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg assistant'; div.id = 'typing-indicator';
+  div.innerHTML = `<div class="bubble assistant typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function hideTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+async function sendChat() {
+  if (chatLoading) return;
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  appendMsg('user', msg);
+  chatHistory.push({role:'user', content: msg});
+  chatLoading = true;
+  document.getElementById('send-btn').disabled = true;
+  showTyping();
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `Sos un asistente amigable para organizar una fiesta infantil. Respondé siempre en español, de forma concisa y cálida. Usá los datos actuales de la lista para responder preguntas.
+
+${buildGuestSummary()}`,
+        messages: chatHistory
+      })
+    });
+    const data = await res.json();
+    const reply = (data.content||[]).map(b=>b.text||'').join('') || 'No pude responder, intentá de nuevo.';
+    hideTyping();
+    appendMsg('assistant', reply);
+    chatHistory.push({role:'assistant', content: reply});
+  } catch(e) {
+    hideTyping();
+    appendMsg('assistant', 'Ocurrió un error de conexión. Por favor intentá de nuevo.');
+  }
+  chatLoading = false;
+  document.getElementById('send-btn').disabled = false;
+}
+
+// INIT
+loadGuests();
+buildGroupFilters();
+updateStats();
+renderList();
+</script>
+</body>
+</html>
